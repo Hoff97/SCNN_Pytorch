@@ -9,7 +9,8 @@ class SCNN(nn.Module):
             self,
             input_size,
             ms_ks=9,
-            pretrained=True
+            pretrained=True,
+            seg_classes=5
     ):
         """
         Argument
@@ -17,6 +18,9 @@ class SCNN(nn.Module):
         """
         super(SCNN, self).__init__()
         self.pretrained = pretrained
+
+        self.seg_classes = seg_classes
+
         self.net_init(input_size, ms_ks)
         if not pretrained:
             self.weight_init()
@@ -25,7 +29,10 @@ class SCNN(nn.Module):
         self.scale_seg = 1.0
         self.scale_exist = 0.1
 
-        self.ce_loss = nn.CrossEntropyLoss(weight=torch.tensor([self.scale_background, 1, 1, 1, 1]))
+        if self.seg_classes == 5:
+            self.ce_loss = nn.CrossEntropyLoss(weight=torch.tensor([self.scale_background, 1, 1, 1, 1]))
+        else:
+            self.ce_loss = nn.CrossEntropyLoss()
         self.bce_loss = nn.BCELoss()
 
     def forward(self, img, seg_gt=None, exist_gt=None):
@@ -87,7 +94,7 @@ class SCNN(nn.Module):
 
     def net_init(self, input_size, ms_ks):
         input_w, input_h = input_size
-        self.fc_input_feature = 5 * int(input_w/16) * int(input_h/16)
+        self.fc_input_feature = self.seg_classes * int(input_w/16) * int(input_h/16)
         self.backbone = models.vgg16_bn(pretrained=self.pretrained).features
 
         # ----------------- process backbone -----------------
@@ -125,7 +132,7 @@ class SCNN(nn.Module):
         # ----------------- SCNN part -----------------
         self.layer2 = nn.Sequential(
             nn.Dropout2d(0.1),
-            nn.Conv2d(128, 5, 1)  # get (nB, 5, 36, 100)
+            nn.Conv2d(128, self.seg_classes, 1)
         )
 
         self.layer3 = nn.Sequential(
@@ -135,7 +142,7 @@ class SCNN(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(self.fc_input_feature, 128),
             nn.ReLU(),
-            nn.Linear(128, 4),
+            nn.Linear(128, self.seg_classes),
             nn.Sigmoid()
         )
 

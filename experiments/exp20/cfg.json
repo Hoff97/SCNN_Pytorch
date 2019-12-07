@@ -4,12 +4,13 @@
 
     "dataset": {
       "dataset_name": "Phoenix",
-      "batch_size": 2,
-      "resize_shape": [512, 288]
+      "batch_size": 4,
+      "resize_shape": [512, 288],
+      "seg_classes": 64
     },
 
     "optim": {
-      "lr": 15e-2,
+      "lr": 15e-3,
       "momentum": 0.9,
       "weight_decay": 1e-4,
       "nesterov": true

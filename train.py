@@ -15,6 +15,8 @@ from utils.lr_scheduler import PolyLR
 from utils.tensorboard import TensorBoard
 from utils.transforms import *
 
+from dataset.Phoenix import all_classes
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -59,9 +61,12 @@ val_dataset = Dataset_Type(Dataset_Path[dataset_name], "val", transform_val)
 val_loader = DataLoader(val_dataset, batch_size=8, collate_fn=val_dataset.collate, num_workers=4)
 
 # ------------ preparation ------------
-net = SCNN(resize_shape, pretrained=True)
+seg_classes = 5
+if 'seg_classes' in exp_cfg['dataset']:
+    seg_classes = exp_cfg['dataset']['seg_classes']
+net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes)
 net = net.to(device)
-net = torch.nn.DataParallel(net)
+#net = torch.nn.DataParallel(net)
 
 optimizer = optim.SGD(net.parameters(), **exp_cfg['optim'])
 lr_scheduler = PolyLR(optimizer, 0.9, **exp_cfg['lr_scheduler'])
@@ -125,7 +130,7 @@ def train(epoch):
     print("------------------------\n")
 
 
-def val(epoch):
+def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255]], dtype='uint8')):
     global best_val_loss
 
     print("Val Epoch: {}".format(epoch))
@@ -140,7 +145,9 @@ def val(epoch):
         for batch_idx, sample in enumerate(val_loader):
             img = sample['img'].to(device)
             segLabel = sample['segLabel'].to(device)
-            exist = sample['exist'].to(device)
+            exist = sample['exist']
+            if exist is not None:
+                exist = exist.to(device)
 
             seg_pred, exist_pred, loss_seg, loss_exist, loss = net(img, segLabel, exist)
             if isinstance(net, torch.nn.DataParallel):
@@ -161,16 +168,17 @@ def val(epoch):
                     img = transform_val_img({'img': img})['img']
 
                     lane_img = np.zeros_like(img)
-                    color = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255]], dtype='uint8')
+                    color = colors
 
                     coord_mask = np.argmax(seg_pred[b], axis=0)
-                    for i in range(0, 4):
-                        if exist_pred[b, i] > 0.5:
-                            lane_img[coord_mask==(i+1)] = color[i]
+                    for i in range(0, colors.shape[0]):
+                        #if exist_pred[b, i] > 0.5:
+                        #    lane_img[coord_mask==(i+1)] = color[i]
+                        lane_img[coord_mask==(i+1)] = color[i]
                     img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                     lane_img = cv2.cvtColor(lane_img, cv2.COLOR_BGR2RGB)
-                    cv2.putText(lane_img, "{}".format([1 if exist_pred[b, i]>0.5 else 0 for i in range(4)]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
+                    cv2.putText(lane_img, "{}".format([1 if exist_pred[b, i]>0.5 else 0 for i in range(colors.shape[0])]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
                     origin_imgs.append(img)
                     origin_imgs.append(lane_img)
                 tensorboard.image_summary("img_{}".format(batch_idx), origin_imgs, epoch)
@@ -217,8 +225,9 @@ def main():
         train(epoch)
         if epoch % 1 == 0:
             print("\nValidation For Experiment: ", exp_dir)
-            print(time.strftime('%H:%M:%S', time.localtime()))
-            val(epoch)
+            #print(time.strftime('%H:%M:%S', time.localtime()))
+            val(epoch, colors=np.array(all_classes))
+            #val(epoch)
 
 
 if __name__ == "__main__":
