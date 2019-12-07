@@ -8,12 +8,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from config import *
 import dataset
+from config import *
 from model import SCNN
+from utils.lr_scheduler import PolyLR
 from utils.tensorboard import TensorBoard
 from utils.transforms import *
-from utils.lr_scheduler import PolyLR
 
 
 def parse_args():
@@ -79,7 +79,10 @@ def train(epoch):
     for batch_idx, sample in enumerate(train_loader):
         img = sample['img'].to(device)
         segLabel = sample['segLabel'].to(device)
-        exist = sample['exist'].to(device)
+        exist = sample['exist']
+
+        if exist is not None:
+            exist = exist.to(device)
 
         optimizer.zero_grad()
         seg_pred, exist_pred, loss_seg, loss_exist, loss = net(img, segLabel, exist)

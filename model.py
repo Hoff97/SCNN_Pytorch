@@ -39,14 +39,17 @@ class SCNN(nn.Module):
         x = x.view(-1, self.fc_input_feature)
         exist_pred = self.fc(x)
 
-        if seg_gt is not None and exist_gt is not None:
+        if seg_gt is not None:
             loss_seg = self.ce_loss(seg_pred, seg_gt)
-            loss_exist = self.bce_loss(exist_pred, exist_gt)
-            loss = loss_seg * self.scale_seg + loss_exist * self.scale_exist
         else:
             loss_seg = torch.tensor(0, dtype=img.dtype, device=img.device)
+
+        if exist_gt is not None:
+            loss_exist = self.bce_loss(exist_pred, exist_gt)
+        else:
             loss_exist = torch.tensor(0, dtype=img.dtype, device=img.device)
-            loss = torch.tensor(0, dtype=img.dtype, device=img.device)
+
+        loss = loss_seg * self.scale_seg + loss_exist * self.scale_exist
 
         return seg_pred, exist_pred, loss_seg, loss_exist, loss
 
