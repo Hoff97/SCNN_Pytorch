@@ -22,8 +22,8 @@ class Phoenix(Dataset):
 
         seg_img = cv2.imread(f'{self.path}/semseg_color/{self.seg_images[idx]}', cv2.IMREAD_UNCHANGED)
         trans_mask = seg_img[:,:,3] == 0
-        seg_img[trans_mask] = [255, 255, 255, 255]
-        seg_img = cv2.cvtColor(seg_img, cv2.COLOR_BGRA2BGR)
+        seg_img[trans_mask] = [0, 0, 0, 255]
+        seg_img = cv2.cvtColor(seg_img, cv2.COLOR_BGRA2RGB)
 
         sample = {
             'img': img,
@@ -174,9 +174,24 @@ all_classes = [
     RAMP_COLOR
 ]
 
+class_names = [
+    'LANE_MARKING_SEGMENTATION_COLOR',
+    'BLOCKED_AREA_SEGMENTATION_COLOR',
+    'DRIVABLE_AREA_SEGMENTATION_COLOR',
+    'STOPLINE_SEGMENTATION_COLOR',
+    'STOPLINE_DASHED_SEGMENTATION_COLOR',
+    'ZEBRA_COLOR',
+    'BACKGROUND_COLOR',
+    'EGO_VEHICLE_COLOR',
+    'OBSTACLE_COLOR',
+    'RAMP_COLOR'
+]
+class_names.extend(TRAFFIC_MARKING_SEGMENTATION_COLORS.keys())
+class_names.append('SIGN_BASE_COLOR')
+class_names.extend(SIGN_TO_COLOR.keys())
+class_names.append('INTERSECTION_COLOR')
+
 all_classes.extend(TRAFFIC_MARKING_SEGMENTATION_COLORS.values())
 all_classes.append(SIGN_BASE_COLOR)
 all_classes.extend(SIGN_TO_COLOR.values())
 all_classes.append(INTERSECTION_COLOR)
-
-print(len(all_classes))
