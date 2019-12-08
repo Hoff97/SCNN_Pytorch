@@ -1,5 +1,4 @@
 import cv2
-
 import numpy as np
 import torch
 from torchvision.transforms import Normalize as Normalize_th
@@ -160,5 +159,3 @@ class ToTensor(CustomTransform):
         _sample['segLabel'] = segLabel
         _sample['exist'] = exist
         return _sample
-
-
