@@ -10,12 +10,11 @@ from tqdm import tqdm
 
 import dataset
 from config import *
+from dataset.Phoenix import all_classes
 from model import SCNN
 from utils.lr_scheduler import PolyLR
 from utils.tensorboard import TensorBoard
 from utils.transforms import *
-
-from dataset.Phoenix import all_classes
 
 
 def parse_args():
@@ -164,7 +163,7 @@ def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 2
 
                 for b in range(len(img)):
                     coord_mask = np.argmax(seg_pred[b], axis=0)
-    
+
                     img_name = sample['img_name'][b]
                     img = cv2.imread(img_name)
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -182,7 +181,7 @@ def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 2
                     img = transform_val_img({'img': img})['img']
                     img, _ = image_mask_vis(img, segLabel[b].cpu(), colors, exist_pred, b)
                     origin_imgs.append(img)
-                    
+
 
                 tensorboard.image_summary("img_{}".format(batch_idx), origin_imgs, epoch)
 
