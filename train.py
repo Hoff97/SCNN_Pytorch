@@ -213,7 +213,7 @@ def image_mask_vis(img, coord_mask, colors, exist_pred, b):
     for i in range(0, colors.shape[0]):
         #if exist_pred[b, i] > 0.5:
         #    lane_img[coord_mask==(i+1)] = color[i]
-        lane_img[coord_mask==(i+1)] = colors[i]
+        lane_img[coord_mask==i] = colors[i]
     img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
     cv2.putText(lane_img, "{}".format([1 if exist_pred[b, i]>0.5 else 0 for i in range(colors.shape[0])]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
     
