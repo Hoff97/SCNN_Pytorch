@@ -20,7 +20,6 @@ class Phoenix(Dataset):
         img = cv2.imread(f'{self.path}/rgb/{self.input_images[idx]}')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        image = cv2.imread('your image', cv2.IMREAD_UNCHANGED)
         seg_img = cv2.imread(f'{self.path}/semseg_color/{self.seg_images[idx]}', cv2.IMREAD_UNCHANGED)
         trans_mask = seg_img[:,:,3] == 0
         seg_img[trans_mask] = [255, 255, 255, 255]
