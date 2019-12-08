@@ -163,24 +163,25 @@ def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 2
                 exist_pred = exist_pred.detach().cpu().numpy()
 
                 for b in range(len(img)):
+                    coord_mask = np.argmax(seg_pred[b], axis=0)
+    
                     img_name = sample['img_name'][b]
                     img = cv2.imread(img_name)
                     img = transform_val_img({'img': img})['img']
 
-                    lane_img = np.zeros_like(img)
-                    color = colors
-
                     coord_mask = np.argmax(seg_pred[b], axis=0)
-                    for i in range(0, colors.shape[0]):
-                        #if exist_pred[b, i] > 0.5:
-                        #    lane_img[coord_mask==(i+1)] = color[i]
-                        lane_img[coord_mask==(i+1)] = color[i]
-                    img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                    lane_img = cv2.cvtColor(lane_img, cv2.COLOR_BGR2RGB)
-                    cv2.putText(lane_img, "{}".format([1 if exist_pred[b, i]>0.5 else 0 for i in range(colors.shape[0])]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
+
+
+                    img, lane_img = image_mask_vis(img, coord_mask, colors, exist_pred, b)
                     origin_imgs.append(img)
                     origin_imgs.append(lane_img)
+
+                    img = cv2.imread(img_name)
+                    img = transform_val_img({'img': img})['img']
+                    img, _ = image_mask_vis(img, segLabel[b].cpu(), colors, exist_pred, b)
+                    origin_imgs.append(img)
+                    
+
                 tensorboard.image_summary("img_{}".format(batch_idx), origin_imgs, epoch)
 
             val_loss += loss.item()
@@ -204,6 +205,19 @@ def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 2
         copy_name = os.path.join(exp_dir, exp_name + '_best.pth')
         shutil.copyfile(save_name, copy_name)
 
+def image_mask_vis(img, coord_mask, colors, exist_pred, b):
+    lane_img = np.zeros_like(img)
+
+    for i in range(0, colors.shape[0]):
+        #if exist_pred[b, i] > 0.5:
+        #    lane_img[coord_mask==(i+1)] = color[i]
+        lane_img[coord_mask==(i+1)] = colors[i]
+    img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    lane_img = cv2.cvtColor(lane_img, cv2.COLOR_BGR2RGB)
+    cv2.putText(lane_img, "{}".format([1 if exist_pred[b, i]>0.5 else 0 for i in range(colors.shape[0])]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
+    
+    return img, lane_img
 
 def main():
     global best_val_loss
