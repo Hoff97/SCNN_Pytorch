@@ -13,8 +13,8 @@ class Phoenix(Dataset):
         self.path = path
         self.transforms = transforms
 
-        self.input_images = os.listdir(f'{path}/rgb')
-        self.seg_images = os.listdir(f'{path}/semseg_color')
+        self.input_images = sorted(os.listdir(f'{path}/rgb'))
+        self.seg_images = sorted(os.listdir(f'{path}/semseg_color'))
 
     def __getitem__(self, idx):
         img = cv2.imread(f'{self.path}/rgb/{self.input_images[idx]}')
