@@ -8,6 +8,8 @@ from torch.utils.data import Dataset
 
 
 class Phoenix(Dataset):
+    """Dataloader for our artifical road segmentation dataset
+    """
     def __init__(self, path, mode, transforms=None):
         super(Phoenix, self).__init__()
         self.path = path
@@ -38,7 +40,7 @@ class Phoenix(Dataset):
 
         W = sample['segLabel'].shape[0]
         H = sample['segLabel'].shape[1]
-        segMap = torch.ones((W,H), dtype=torch.long)*6
+        segMap = torch.ones((W,H), dtype=torch.long)*(-1)
 
         for ix, color in enumerate(all_classes):
             r = (sample['segLabel'][:,:] == torch.tensor(color)).all(dim=2)
