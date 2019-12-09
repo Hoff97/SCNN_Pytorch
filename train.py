@@ -67,7 +67,7 @@ net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes, weights=Datas
 net = net.to(device)
 #net = torch.nn.DataParallel(net)
 
-optimizer = optim.SGD(net.parameters(), **exp_cfg['optim'])
+optimizer = optim.Adam(net.parameters(), **exp_cfg['optim'])
 lr_scheduler = PolyLR(optimizer, 0.9, **exp_cfg['lr_scheduler'])
 best_val_loss = 1e6
 
