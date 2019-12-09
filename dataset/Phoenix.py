@@ -46,6 +46,8 @@ class Phoenix(Dataset):
             r = (sample['segLabel'][:,:] == torch.tensor(color)).all(dim=2)
             segMap[r] = ix
 
+        sample['segLabel'] = segMap
+
         exist = torch.zeros(len(all_classes), dtype=torch.float)
         for ix in range(len(all_classes)):
             exist[ix] = (segMap == ix).any().float()
