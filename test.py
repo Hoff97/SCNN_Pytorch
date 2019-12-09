@@ -42,12 +42,12 @@ transform_train = Compose(Resize(resize_shape), Rotation(2), ToTensor(),
                           Normalize(mean=mean, std=std))
 dataset_name = exp_cfg['dataset'].pop('dataset_name')
 Dataset_Type = getattr(dataset, dataset_name)
-train_dataset = Dataset_Type(Dataset_Path[dataset_name], "train", transform_train)
+train_dataset = Dataset_Type(Dataset_Path[dataset_name], "train", transform_train, **exp_cfg['dataset']['other'])
 
 # ------------ preparation ------------
 seg_classes = 5
-if 'seg_classes' in exp_cfg['dataset']:
-    seg_classes = exp_cfg['dataset']['seg_classes']
+if hasattr(train_dataset, 'seg_classes'):
+    seg_classes = getattr(train_dataset, 'seg_classes')
 
 def main():
     for i, t in enumerate(train_dataset):

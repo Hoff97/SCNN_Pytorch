@@ -10,19 +10,24 @@ from torch.utils.data import Dataset
 class Phoenix(Dataset):
     """Dataloader for our artifical road segmentation dataset
     """
-    def __init__(self, path, mode, transforms=None):
+    def __init__(self, path, mode, transforms=None, seg_mode='default'):
         super(Phoenix, self).__init__()
         self.path = path
         self.transforms = transforms
+        self.seg_mode = seg_mode
+
+        self.seg_folder = 'semseg_color' if seg_mode == 'default' else 'lane_segmentation'
+
+        self.seg_classes = len(all_classes) if seg_mode == 'default' else len(lane_classes)
 
         self.input_images = sorted(os.listdir(f'{path}/rgb'))
-        self.seg_images = sorted(os.listdir(f'{path}/semseg_color'))
+        self.seg_images = sorted(os.listdir(f'{path}/{self.seg_folder}'))
 
     def __getitem__(self, idx):
         img = cv2.imread(f'{self.path}/rgb/{self.input_images[idx]}')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        seg_img = cv2.imread(f'{self.path}/semseg_color/{self.seg_images[idx]}', cv2.IMREAD_UNCHANGED)
+        seg_img = cv2.imread(f'{self.path}/{self.seg_folder}/{self.seg_images[idx]}', cv2.IMREAD_UNCHANGED)
         trans_mask = seg_img[:,:,3] == 0
         seg_img[trans_mask] = [0, 0, 0, 255]
         seg_img = cv2.cvtColor(seg_img, cv2.COLOR_BGRA2RGB)
@@ -42,14 +47,16 @@ class Phoenix(Dataset):
         H = sample['segLabel'].shape[1]
         segMap = torch.ones((W,H), dtype=torch.long)*(-1)
 
-        for ix, color in enumerate(all_classes):
+        classes = all_classes if self.seg_mode == 'default' else lane_classes
+
+        for ix, color in enumerate(classes):
             r = (sample['segLabel'][:,:] == torch.tensor(color)).all(dim=2)
             segMap[r] = ix
 
         sample['segLabel'] = segMap
 
-        exist = torch.zeros(len(all_classes), dtype=torch.float)
-        for ix in range(len(all_classes)):
+        exist = torch.zeros(len(classes), dtype=torch.float)
+        for ix in range(len(classes)):
             exist[ix] = (segMap == ix).any().float()
         sample['exist'] = exist
 
@@ -173,6 +180,8 @@ LANE_MARKING_LEFT_SIDE = (251, 251, 251)
 
 def convert_to_one_range(color):
     return (color[0]/255, color[1]/255, color[2]/255)
+
+lane_classes = [LANE_MARKING_RIGHT_SIDE, LANE_MARKING_MIDDLE, LANE_MARKING_LEFT_SIDE, BACKGROUND_COLOR]
 
 all_classes = [
     LANE_MARKING_SEGMENTATION_COLOR,

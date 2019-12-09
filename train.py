@@ -56,13 +56,13 @@ train_loader = DataLoader(train_dataset, batch_size=exp_cfg['dataset']['batch_si
 transform_val_img = Resize(resize_shape)
 transform_val_x = Compose(ToTensor(), Normalize(mean=mean, std=std))
 transform_val = Compose(transform_val_img, transform_val_x)
-val_dataset = Dataset_Type(Dataset_Path[dataset_name], "val", transform_val)
+val_dataset = Dataset_Type(Dataset_Path[dataset_name], "val", transform_val, **exp_cfg['dataset']['other'])
 val_loader = DataLoader(val_dataset, batch_size=8, collate_fn=val_dataset.collate, num_workers=4)
 
 # ------------ preparation ------------
 seg_classes = 5
-if 'seg_classes' in exp_cfg['dataset']:
-    seg_classes = exp_cfg['dataset']['seg_classes']
+if hasattr(train_dataset, 'seg_classes'):
+    seg_classes = getattr(train_dataset, 'seg_classes')
 net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes)
 net = net.to(device)
 #net = torch.nn.DataParallel(net)

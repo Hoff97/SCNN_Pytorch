@@ -6,7 +6,9 @@
       "dataset_name": "Phoenix",
       "batch_size": 2,
       "resize_shape": [512, 384],
-      "seg_classes": 64
+      "other": {
+        "seg_mode": "lanes"
+      }
     },
 
     "optim": {
