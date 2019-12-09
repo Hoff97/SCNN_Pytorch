@@ -45,7 +45,7 @@ class Phoenix(Dataset):
 
         W = sample['segLabel'].shape[0]
         H = sample['segLabel'].shape[1]
-        segMap = torch.ones((W,H), dtype=torch.long)*(-1)
+        segMap = torch.ones((W,H), dtype=torch.long)*0
 
         classes = all_classes if self.seg_mode == 'default' else lane_classes
 
@@ -181,16 +181,16 @@ LANE_MARKING_LEFT_SIDE = (251, 251, 251)
 def convert_to_one_range(color):
     return (color[0]/255, color[1]/255, color[2]/255)
 
-lane_classes = [LANE_MARKING_RIGHT_SIDE, LANE_MARKING_MIDDLE, LANE_MARKING_LEFT_SIDE, BACKGROUND_COLOR]
+lane_classes = [BACKGROUND_COLOR, LANE_MARKING_RIGHT_SIDE, LANE_MARKING_MIDDLE, LANE_MARKING_LEFT_SIDE]
 
 all_classes = [
+    BACKGROUND_COLOR,
     LANE_MARKING_SEGMENTATION_COLOR,
     BLOCKED_AREA_SEGMENTATION_COLOR,
     DRIVABLE_AREA_SEGMENTATION_COLOR,
     STOPLINE_SEGMENTATION_COLOR,
     STOPLINE_DASHED_SEGMENTATION_COLOR,
     ZEBRA_COLOR,
-    BACKGROUND_COLOR,
     EGO_VEHICLE_COLOR,
     OBSTACLE_COLOR,
     RAMP_COLOR

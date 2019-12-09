@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import dataset
 from config import *
-from dataset.Phoenix import all_classes
+from dataset.Phoenix import all_classes, lane_classes
 from model import SCNN
 from utils.lr_scheduler import PolyLR
 from utils.tensorboard import TensorBoard
@@ -49,7 +49,7 @@ transform_train = Compose(Resize(resize_shape), Rotation(2), ToTensor(),
                           Normalize(mean=mean, std=std))
 dataset_name = exp_cfg['dataset'].pop('dataset_name')
 Dataset_Type = getattr(dataset, dataset_name)
-train_dataset = Dataset_Type(Dataset_Path[dataset_name], "train", transform_train)
+train_dataset = Dataset_Type(Dataset_Path[dataset_name], "train", transform_train, **exp_cfg['dataset']['other'])
 train_loader = DataLoader(train_dataset, batch_size=exp_cfg['dataset']['batch_size'], shuffle=True, collate_fn=train_dataset.collate, num_workers=8)
 
 # ------------ val data ------------
@@ -239,7 +239,7 @@ def main():
         if epoch % 1 == 0:
             print("\nValidation For Experiment: ", exp_dir)
             #print(time.strftime('%H:%M:%S', time.localtime()))
-            val(epoch, colors=np.array(all_classes))
+            val(epoch, colors=np.array(lane_classes))
             #val(epoch)
 
 
