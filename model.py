@@ -10,7 +10,8 @@ class SCNN(nn.Module):
             input_size,
             ms_ks=9,
             pretrained=True,
-            seg_classes=5
+            seg_classes=5,
+            weights = None
     ):
         """
         Argument
@@ -31,8 +32,11 @@ class SCNN(nn.Module):
 
         if self.seg_classes == 5:
             self.ce_loss = nn.CrossEntropyLoss(weight=torch.tensor([self.scale_background, 1, 1, 1, 1]))
+        elif weights != None:
+            self.ce_loss = nn.CrossEntropyLoss(weight=torch.tensor(weights))
         else:
             self.ce_loss = nn.CrossEntropyLoss()
+
         self.bce_loss = nn.BCELoss()
 
     def forward(self, img, seg_gt=None, exist_gt=None):

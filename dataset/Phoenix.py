@@ -89,6 +89,14 @@ class Phoenix(Dataset):
 
         return samples
 
+    @staticmethod
+    def get_colors(seg_mode):
+        all_classes if seg_mode == 'default' else lane_classes
+
+    @staticmethod
+    def get_weights(seg_mode):
+        [1]*len(all_classes) if seg_mode == 'default' else [0.4,1,1,1]
+
 LANE_MARKING_SEGMENTATION_COLOR = (128, 0, 0)
 BLOCKED_AREA_SEGMENTATION_COLOR = (0, 128, 0)
 # pedestrian island currently not segmented, could do in the future
