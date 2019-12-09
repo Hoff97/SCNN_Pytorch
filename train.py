@@ -179,8 +179,8 @@ def val(epoch, colors = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 2
                     img = cv2.imread(img_name)
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                     img = transform_val_img({'img': img})['img']
-                    img, _ = image_mask_vis(img, segLabel[b].cpu(), colors, exist_pred, b)
-                    origin_imgs.append(img)
+                    _, lane_img = image_mask_vis(img, segLabel[b].cpu(), colors, exist, b)
+                    origin_imgs.append(lane_img)
 
 
                 tensorboard.image_summary("img_{}".format(batch_idx), origin_imgs, epoch)
