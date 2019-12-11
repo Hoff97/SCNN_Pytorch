@@ -64,7 +64,7 @@ val_loader = DataLoader(val_dataset, batch_size=8, collate_fn=dataset.collate, n
 seg_classes = 5
 if hasattr(dataset, 'seg_classes'):
     seg_classes = getattr(dataset, 'seg_classes')
-net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes, weights=Dataset_Type.get_weights(**exp_cfg['dataset']['other']))
+net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes, weights=Dataset_Type.get_weights(exp_cfg['dataset']['other']['seg_mode']))
 net = net.to(device)
 #net = torch.nn.DataParallel(net)
 
@@ -240,7 +240,7 @@ def main():
         if epoch % 1 == 0:
             print("\nValidation For Experiment: ", exp_dir)
             #print(time.strftime('%H:%M:%S', time.localtime()))
-            val(epoch, colors=np.array(Dataset_Type.get_colors(**exp_cfg['dataset']['other'])))
+            val(epoch, colors=np.array(Dataset_Type.get_colors(exp_cfg['dataset']['other']['seg_mode'])))
             #val(epoch)
 
 
