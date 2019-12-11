@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 class Phoenix(Dataset):
     """Dataloader for our artifical road segmentation dataset
     """
-    def __init__(self, path, mode, transforms=None, seg_mode='default'):
+    def __init__(self, path, transforms=None, seg_mode='default'):
         super(Phoenix, self).__init__()
         self.path = path
         self.transforms = transforms
@@ -31,7 +31,6 @@ class Phoenix(Dataset):
         trans_mask = seg_img[:,:,3] == 0
         seg_img[trans_mask] = [0, 0, 0, 255]
         seg_img = cv2.cvtColor(seg_img, cv2.COLOR_BGRA2RGB)
-
 
         sample = {
             'img': img,

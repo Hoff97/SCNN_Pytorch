@@ -39,30 +39,31 @@ device = torch.device(exp_cfg['device'])
 tensorboard = TensorBoard(exp_dir)
 
 # ------------ train data ------------
-# # CULane mean, std
-# mean=(0.3598, 0.3653, 0.3662)
-# std=(0.2573, 0.2663, 0.2756)
-# Imagenet mean, std
 mean=(0.485, 0.456, 0.406)
 std=(0.229, 0.224, 0.225)
 transform_train = Compose(Resize(resize_shape), Rotation(2), ToTensor(),
                           Normalize(mean=mean, std=std))
-dataset_name = exp_cfg['dataset'].pop('dataset_name')
-Dataset_Type = getattr(dataset, dataset_name)
-train_dataset = Dataset_Type(Dataset_Path[dataset_name], "train", transform_train, **exp_cfg['dataset']['other'])
-train_loader = DataLoader(train_dataset, batch_size=exp_cfg['dataset']['batch_size'], shuffle=True, collate_fn=train_dataset.collate, num_workers=8)
-
-# ------------ val data ------------
 transform_val_img = Resize(resize_shape)
 transform_val_x = Compose(ToTensor(), Normalize(mean=mean, std=std))
 transform_val = Compose(transform_val_img, transform_val_x)
-val_dataset = Dataset_Type(Dataset_Path[dataset_name], "val", transform_val, **exp_cfg['dataset']['other'])
-val_loader = DataLoader(val_dataset, batch_size=8, collate_fn=val_dataset.collate, num_workers=4)
+
+dataset_name = exp_cfg['dataset'].pop('dataset_name')
+Dataset_Type = getattr(dataset, dataset_name)
+dataset = Dataset_Type(Dataset_Path[dataset_name], transform_train, **exp_cfg['dataset']['other'])
+
+test_train_split = 0.9
+train_size = int(test_train_split * len(dataset))
+test_size = len(dataset) - train_size
+
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+
+train_loader = DataLoader(train_dataset, batch_size=exp_cfg['dataset']['batch_size'], shuffle=True, collate_fn=dataset.collate, num_workers=8)
+val_loader = DataLoader(val_dataset, batch_size=8, collate_fn=dataset.collate, num_workers=4)
 
 # ------------ preparation ------------
 seg_classes = 5
-if hasattr(train_dataset, 'seg_classes'):
-    seg_classes = getattr(train_dataset, 'seg_classes')
+if hasattr(dataset, 'seg_classes'):
+    seg_classes = getattr(dataset, 'seg_classes')
 net = SCNN(resize_shape, pretrained=True, seg_classes=seg_classes, weights=Dataset_Type.get_weights(**exp_cfg['dataset']['other']))
 net = net.to(device)
 #net = torch.nn.DataParallel(net)
