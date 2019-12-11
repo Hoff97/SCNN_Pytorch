@@ -6,11 +6,23 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+def radial_gradient(shape, center = None, outer = 200, inner = 100, c1 = np.array([255,255,255]), c2=np.array([0,0,0])):
+    i = np.indices(shape)
+    z = np.dstack((i[0],i[1]))
+    if center == None:
+        center = np.array([shape[0]/2, shape[1]/2])
+    d = np.linalg.norm(z-center, axis=2)
+    d = np.minimum(np.maximum((d - inner)/(outer-inner), 0), 1)
+    d = np.tile(d.reshape((shape[0], shape[1], 1)), (1,1,3))
+
+    d = d*(c2-c1)+c1
+    d=d.astype('uint8')
+    return d
 
 class Phoenix(Dataset):
     """Dataloader for our artifical road segmentation dataset
     """
-    def __init__(self, path, transforms=None, seg_mode='default'):
+    def __init__(self, path, transforms=None, seg_mode='default', augment=False, preprocess = False, visualize=False):
         super(Phoenix, self).__init__()
         self.path = path
         self.transforms = transforms
@@ -23,6 +35,8 @@ class Phoenix(Dataset):
         self.input_images = sorted(os.listdir(f'{path}/rgb'))
         self.seg_images = sorted(os.listdir(f'{path}/{self.seg_folder}'))
 
+        self.visualize = visualize
+
     def __getitem__(self, idx):
         img = cv2.imread(f'{self.path}/rgb/{self.input_images[idx]}')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -31,6 +45,26 @@ class Phoenix(Dataset):
         trans_mask = seg_img[:,:,3] == 0
         seg_img[trans_mask] = [0, 0, 0, 255]
         seg_img = cv2.cvtColor(seg_img, cv2.COLOR_BGRA2RGB)
+
+        scale = (img.shape[0]/512.)
+
+        r = (512/2 - 50)*scale
+        outer = r
+        inner = r - 15*scale
+
+        d1 = radial_gradient((img.shape[0], img.shape[1]), outer=outer, inner=inner)
+        d2 = radial_gradient((img.shape[0], img.shape[1]), outer=inner+1, inner=inner)
+        img = (img.astype('float')*(d1.astype('float')/255.)).astype('uint8')
+        seg_img = (seg_img.astype('float')*(d2.astype('float')/255.)).astype('uint8')
+
+        if self.visualize:
+            screen = cv2.cvtColor(seg_img, cv2.COLOR_RGB2BGR)
+            cv2.imshow('Test', screen)
+            cv2.waitKey()
+
+            screen = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            cv2.imshow('Test', screen)
+            cv2.waitKey()
 
         sample = {
             'img': img,
