@@ -4,100 +4,6 @@ SCNN is a segmentation-tasked lane detection algorithm, described in ['Spatial A
 
 This repository contains a re-implementation in Pytorch.
 
-
-
-### Updates
-
-- 2019 / 08 / 14: Code refined including more convenient test & evaluation script.
-- 2019 / 08 / 12: Trained model on both dataset provided.
-- 2019 / 05 / 08: Evaluation is provided.
-- 2019 / 04 / 23: Trained model converted from [official t7 model](https://github.com/XingangPan/SCNN#Testing) is provided.
-
-<br/>
-
-## Data preparation
-
-### CULane
-
-The dataset is available in [CULane](https://xingangpan.github.io/projects/CULane.html). Please download and unzip the files in one folder, which later is represented as `CULane_path`.  Then modify the path of `CULane_path` in `config.py`. Also, modify the path of `CULane_path` as `data_dir`  in `utils/lane_evaluation/CULane/Run.sh` .
-```
-CULane_path
-├── driver_100_30frame
-├── driver_161_90frame
-├── driver_182_30frame
-├── driver_193_90frame
-├── driver_23_30frame
-├── driver_37_30frame
-├── laneseg_label_w16
-├── laneseg_label_w16_test
-└── list
-```
-
- **Note: absolute path is encouraged.**
-
-
-
-
-
-### Tusimple
-The dataset is available in [here](https://github.com/TuSimple/tusimple-benchmark/issues/3). Please download and unzip the files in one folder, which later is represented as `Tusimple_path`. Then modify the path of `Tusimple_path` in `config.py`.
-```
-Tusimple_path
-├── clips
-├── label_data_0313.json
-├── label_data_0531.json
-├── label_data_0601.json
-└── test_label.json
-```
-
-**Note:  seg\_label images and gt.txt, as in CULane dataset format,  will be generated the first time `Tusimple` object is instantiated. It may take time.**
-
-
-
-<br/>
-
-## Trained Model Provided
-
-* Model trained on CULane Dataset can be converted from [official implementation](https://github.com/XingangPan/SCNN#Testing)， which can be downloaded [here](https://drive.google.com/open?id=1Wv3r3dCYNBwJdKl_WPEfrEOt-XGaROKu). Please put the `vgg_SCNN_DULR_w9.t7` file into `experiments/vgg_SCNN_DULR_w9`.
-
-  ```bash
-  python experiments/vgg_SCNN_DULR_w9/t7_to_pt.py
-  ```
-
-  Model will be cached into `experiments/vgg_SCNN_DULR_w9/vgg_SCNN_DULR_w9.pth`. 
-
-  **Note**:`torch.utils.serialization` is obsolete in Pytorch 1.0+. You can directly download **the converted model [here](https://drive.google.com/open?id=1bBdN3yhoOQBC9pRtBUxzeRrKJdF7uVTJ)**.
-
-
-
-* My trained model on Tusimple can be downloaded [here](https://drive.google.com/open?id=1IwEenTekMt-t6Yr5WJU9_kv4d_Pegd_Q). Its configure file is in `exp0`.
-
-| Accuracy | FP   | FN   |
-| -------- | ---- | ---- |
-| 94.16%   |0.0735|0.0825|
-
-
-
-
-
-* My trained model on CULane can be downloaded [here](https://drive.google.com/open?id=1AZn23w8RbMh1P6lJcVcf6PcTIWJvQg9u). Its configure file is in `exp10`.
-
-| Category  | F1-measure          |
-| --------- | ------------------- |
-| Normal    | 90.26               |
-| Crowded   | 68.23               |
-| HLight    | 61.84                |
-| Shadow    | 61.16               |
-| No line   | 43.44               |
-| Arrow     | 84.64               |
-| Curve     | 61.74               |
-| Crossroad | 2728 （FP measure） |
-| Night     | 65.32               |
-
-
-
-
-
 <br/>
 
 
@@ -172,9 +78,6 @@ python demo_test.py   -i demo/demo.jpg
   ```Shell
   python test_tusimple.py --exp_dir ./experiments/exp0
   ```
-
-
-
 
 
 ## Acknowledgement
