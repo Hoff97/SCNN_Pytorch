@@ -151,11 +151,14 @@ def get_input_optimizer(input_img):
 
 def run_style_transfer(cnn, normalization_mean, normalization_std,
                        content_img, style_img, input_img, num_steps=300,
-                       style_weight=1000000, content_weight=1):
+                       style_weight=1000000, content_weight=1,
+                       content_layers=content_layers_default,
+                       style_layers=style_layers_default):
     """Run the style transfer."""
     print('Building the style transfer model..')
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
-        normalization_mean, normalization_std, style_img, content_img)
+        normalization_mean, normalization_std, style_img, content_img,
+        content_layers=content_layers, style_layers = style_layers)
     optimizer = get_input_optimizer(input_img)
 
     print('Optimizing..')
@@ -199,6 +202,9 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
     return input_img
 
+def parse_range(r):
+    return range(*[int(s) for s in r.split(':')])
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--imgs", type=str, default="./res/phoenix/top/rgb")
@@ -207,6 +213,9 @@ def main():
     parser.add_argument("--vis", "-v", action='store_true')
     parser.add_argument("--number", "-n", type=int, default=-1)
     parser.add_argument("--log", "-l", action='store_true')
+    parser.add_argument("--iterations", "-i", type=int, default=300)
+    parser.add_argument("--style_layer", type=str, default='0:3')
+    parser.add_argument("--content_layer", type=str, default='3:4')
     args = parser.parse_args()
 
     vis = args.vis
@@ -215,13 +224,19 @@ def main():
     n = args.number
     out_dir = args.output
     log = args.log
+    iterations = args.iterations
 
+    style_layer = args.style_layer
+    content_layer = args.content_layer
+    style_layers = [f'conv_{i+1}' for i in parse_range(style_layer)]
+    content_layers = [f'conv_{i+1}' for i in parse_range(content_layer)]
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     style_imgs = None
-    if os.path.isfile(style):
+    style_is_file = os.path.isfile(style)
+    if style_is_file:
         style_imgs = [image_loader(style)]
     elif os.path.isdir(style):
         style_imgs = [image_loader(os.path.join(style, name)) for name in os.listdir(style)]
@@ -244,7 +259,10 @@ def main():
         plt.figure()
         imshow(content_imgs[0], title='Content Image')
 
-    style_imgs = torch.stack(style_imgs, dim=1).squeeze()
+    if style_is_file:
+        style_imgs = style_imgs[0]
+    else:
+        style_imgs = torch.stack(style_imgs, dim=1).squeeze()
 
     cnn = models.vgg19(pretrained=True).features.to(device).eval()
     cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
@@ -262,7 +280,8 @@ def main():
 
 
         output = run_style_transfer(cnn, cnn_normalization_mean, cnn_normalization_std,
-                       content_img, style_imgs, input_img)
+                       content_img, style_imgs, input_img, num_steps=iterations,
+                       style_layers=style_layers, content_layers=content_layers)
 
         if vis:
             plt.figure()
