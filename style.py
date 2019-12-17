@@ -1,19 +1,15 @@
+import argparse
+import copy
+import os
+
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-from PIL import Image
-import matplotlib.pyplot as plt
-
-import torchvision.transforms as transforms
 import torchvision.models as models
-
-import copy
-import argparse
-
-import os
-
+import torchvision.transforms as transforms
+from PIL import Image
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -224,13 +220,17 @@ def main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    style_img = image_loader("./res/style/frame0296.png")
+    style_imgs = None
+    if os.path.isfile(style):
+        style_imgs = [image_loader(style)]
+    elif os.path.isdir(style):
+        style_imgs = [image_loader(os.path.join(style, name)) for name in os.listdir(style)]
 
     content_imgs_name = os.listdir(imgs_dir)
     content_imgs_name.sort()
     content_imgs = [image_loader(os.path.join(imgs_dir, name)) for name in content_imgs_name]
 
-    assert style_img.size() == content_imgs[0].size(), \
+    assert style_imgs[0].size() == content_imgs[0].size(), \
         "we need to import style and content images of the same size"
 
 
@@ -238,11 +238,13 @@ def main():
 
     if vis:
         plt.figure()
-        imshow(style_img, title='Style Image')
+        imshow(style_imgs[0], title='Style Image')
 
     if vis:
         plt.figure()
         imshow(content_imgs[0], title='Content Image')
+
+    style_imgs = torch.stack(style_imgs, dim=1).squeeze()
 
     cnn = models.vgg19(pretrained=True).features.to(device).eval()
     cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
@@ -260,7 +262,7 @@ def main():
 
 
         output = run_style_transfer(cnn, cnn_normalization_mean, cnn_normalization_std,
-                       content_img, style_img, input_img)
+                       content_img, style_imgs, input_img)
 
         if vis:
             plt.figure()
