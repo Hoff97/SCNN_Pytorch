@@ -1,0 +1,4 @@
+res/phoenix/**
+**/__pycache__/**
+*.pth
+*.5.v2
