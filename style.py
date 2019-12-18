@@ -216,6 +216,7 @@ def main():
     parser.add_argument("--iterations", "-i", type=int, default=300)
     parser.add_argument("--style_layer", type=str, default='0:3')
     parser.add_argument("--content_layer", type=str, default='3:4')
+    parser.add_argument("--cont", "-c", action='store_true')
     args = parser.parse_args()
 
     vis = args.vis
@@ -225,6 +226,7 @@ def main():
     out_dir = args.output
     log = args.log
     iterations = args.iterations
+    cont = args.cont
 
     style_layer = args.style_layer
     content_layer = args.content_layer
@@ -243,6 +245,12 @@ def main():
 
     content_imgs_name = os.listdir(imgs_dir)
     content_imgs_name.sort()
+
+    if cont:
+        num_out = len(os.listdir(out_dir))
+        print(num_out)
+        content_imgs_name = content_imgs_name[num_out:]
+    
     content_imgs = [image_loader(os.path.join(imgs_dir, name)) for name in content_imgs_name]
 
     assert style_imgs[0].size() == content_imgs[0].size(), \
