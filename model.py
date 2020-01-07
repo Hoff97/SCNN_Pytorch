@@ -81,20 +81,32 @@ class SCNN(nn.Module):
         """
         nB, C, H, W = x.shape
         if vertical:
-            slices = [x[:, :, i:(i + 1), :] for i in range(H)]
+            #slices = [x[:, :, i:(i + 1), :] for i in range(H)]
+            slices = x.permute(2,0,1,3)
             dim = 2
         else:
-            slices = [x[:, :, :, i:(i + 1)] for i in range(W)]
+            #slices = [x[:, :, :, i:(i + 1)] for i in range(W)]
+            slices = x.permute(3,0,1,2)
             dim = 3
         if reverse:
-            slices = slices[::-1]
+            slices = slices.flip(0)
 
-        out = [slices[0]]
-        for i in range(1, len(slices)):
-            out.append(slices[i] + F.relu(conv(out[i - 1])))
+        #out = [slices[0]]
+        out = slices
+        for i in range(1, slices.shape[0]):
+            res = F.relu(conv(out[i - 1].reshape(nB,C,1,-1)))
+            out[i] += res.reshape((nB,C,-1))
+
+            #out.append(slices[i] + F.relu(conv(out[i - 1])))
         if reverse:
-            out = out[::-1]
-        return torch.cat(out, dim=dim)
+            out = out.flip(0)
+            #out = out[::-1]
+
+        #return torch.cat(out, dim=dim)
+        if vertical:
+            return out.permute(1,2,0,3)
+        else:
+            return out.permute(1,2,3,0)
 
     def net_init(self, input_size, ms_ks):
         input_w, input_h = input_size
